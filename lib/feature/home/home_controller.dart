@@ -23,6 +23,8 @@ class HomeController extends GetxController {
   int _page = 1;
   int _totalPages = 1;
   bool _isFetchingMore = false;
+  bool _isRefreshing = false;
+  int _refreshRequestId = 0;
 
   bool get hasMore => _page < _totalPages;
 
@@ -56,31 +58,66 @@ class HomeController extends GetxController {
   }
 
   Future<void> refreshDeals() async {
+    if (_isRefreshing) return;
+    _isRefreshing = true;
+    final currentRequestId = ++_refreshRequestId;
     _page = 1;
-    final res = await dealRepo.fetchDeals(page: 1);
-    _totalPages = res.totalPages;
-    deals.assignAll(res.items);
-    refreshController.refreshCompleted();
+
+    try {
+      final res = await dealRepo.fetchDeals(page: 1);
+      if (currentRequestId == _refreshRequestId) {
+        _totalPages = res.totalPages;
+        deals.assignAll(res.items);
+        refreshController.resetNoData();
+        refreshController.refreshCompleted();
+      }
+    } catch (e) {
+      LogService.error('refreshDeals failed', e);
+      if (currentRequestId == _refreshRequestId) {
+        refreshController.refreshFailed();
+      }
+    } finally {
+      if (currentRequestId == _refreshRequestId) {
+        _isRefreshing = false;
+      }
+    }
   }
 
   Future<void> loadMore() async {
-    if (_isFetchingMore) return;
+    if (_isFetchingMore || _isRefreshing) return;
     if (!hasMore) {
       refreshController.loadNoData();
       return;
     }
     _isFetchingMore = true;
-    _page++;
+    final currentRequestId = _refreshRequestId;
+    final targetPage = _page + 1;
+
     try {
-      final res = await dealRepo.fetchDeals(page: _page);
-      _totalPages = res.totalPages;
-      deals.addAll(res.items);
+      final res = await dealRepo.fetchDeals(page: targetPage);
+      if (currentRequestId == _refreshRequestId && !_isRefreshing) {
+        _page = targetPage;
+        _totalPages = res.totalPages;
+
+        final existingIds = deals.map((d) => d.id).toSet();
+        final newItems =
+            res.items.where((d) => !existingIds.contains(d.id)).toList();
+        deals.addAll(newItems);
+
+        if (!hasMore) {
+          refreshController.loadNoData();
+        } else {
+          refreshController.loadComplete();
+        }
+      }
     } catch (e) {
       LogService.error('loadMore failed', e);
-      _page--;
+      if (currentRequestId == _refreshRequestId) {
+        refreshController.loadFailed();
+      }
+    } finally {
+      _isFetchingMore = false;
     }
-    _isFetchingMore = false;
-    refreshController.loadComplete();
   }
 
   void scrollToTop() {
