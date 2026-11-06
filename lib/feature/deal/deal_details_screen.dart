@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../app_config.dart';
+import '../../service/cart_service.dart';
+import '../shared_widget/flash_sale_countdown.dart';
 import '../shared_widget/the_network_image.dart';
 import 'deal_details_controller.dart';
 
@@ -11,6 +13,7 @@ class DealDetailsScreen extends GetView<DealDetailsController> {
   @override
   Widget build(BuildContext context) {
     final deal = controller.deal;
+    final isExpired = deal.isFlashExpired;
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -18,8 +21,32 @@ class DealDetailsScreen extends GetView<DealDetailsController> {
             expandedHeight: 240,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              background:
+              background: Stack(
+                fit: StackTraceFit.expand,
+                children: [
                   TheNetworkImage(url: deal.imageUrl, fit: BoxFit.cover),
+                  if (deal.isFlashSale && deal.flashSaleEndsAt != null)
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: FlashSaleCountdown(
+                        flashSaleEndsAt: deal.flashSaleEndsAt!,
+                        onExpired: () {
+                          if (Get.isRegistered<CartService>()) {
+                            Get.find<CartService>().removeExpiredFlashItems();
+                          }
+                        },
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        textStyle: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
           SliverToBoxAdapter(
@@ -131,9 +158,11 @@ class DealDetailsScreen extends GetView<DealDetailsController> {
         child: SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: controller.addToCart,
-            icon: const Icon(Icons.add_shopping_cart),
-            label: const Text('Add to bag'),
+            onPressed: isExpired ? null : controller.addToCart,
+            icon: Icon(isExpired
+                ? Icons.timer_off_outlined
+                : Icons.add_shopping_cart),
+            label: Text(isExpired ? 'Flash sale expired' : 'Add to bag'),
           ),
         ),
       ),
