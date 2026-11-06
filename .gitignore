@@ -1,0 +1,43 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+devtools_options.yaml
+
+# IntelliJ project files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Android Studio project files
+android/app/debug/
+android/app/release/
+android/app/profile/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbol listing
+/android/app/app.iml
+/android/key.properties
+/android/local.properties
+/android/app/google-services.json
+
+# iOS
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcworkspace/
