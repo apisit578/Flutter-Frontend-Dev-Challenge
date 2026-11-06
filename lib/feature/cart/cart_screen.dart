@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../app_config.dart';
 import '../shared_widget/the_network_image.dart';
 import 'cart_controller.dart';
+import 'widget/reservation_countdown.dart';
 
 class CartScreen extends GetView<CartController> {
   const CartScreen({super.key});
@@ -56,6 +57,13 @@ class CartScreen extends GetView<CartController> {
                                   fontSize: 13,
                                   color: AppConfig.primaryGreen,
                                   fontWeight: FontWeight.w600)),
+                          if (item.reservation != null) ...[
+                            const SizedBox(height: 4),
+                            ReservationCountdown(
+                              reservation: item.reservation!,
+                              onExpired: cart.purgeExpiredReservations,
+                            ),
+                          ],
                         ],
                       ),
                     ),
