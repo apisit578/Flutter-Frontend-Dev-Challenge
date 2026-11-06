@@ -94,8 +94,13 @@ class HomeScreen extends GetView<HomeController> {
                         ],
                       ),
                     ),
-                    ...controller.visibleDeals
-                        .map((deal) => DealCard(deal: deal)),
+                    ...controller.visibleDeals.asMap().entries.map(
+                          (entry) => DealCard(
+                            deal: entry.value,
+                            source: 'home_feed',
+                            position: entry.key,
+                          ),
+                        ),
                     const SizedBox(height: 24),
                   ],
                 ),
