@@ -15,11 +15,20 @@ class PickupWindowModel {
   }
 
   /// Human readable label, e.g. "17:30 – 21:00".
-  String get label =>
-      '${DateFormat('HH:mm').format(start)} – ${DateFormat('HH:mm').format(end)}';
+  String get label {
+    final localStart = start.toLocal();
+    final localEnd = end.toLocal();
+    return '${DateFormat('HH:mm').format(localStart)} – ${DateFormat('HH:mm').format(localEnd)}';
+  }
 
   /// Whether pickup starts today.
-  bool get isToday => start.day == DateTime.now().day;
+  bool get isToday {
+    final now = DateTime.now();
+    final localStart = start.toLocal();
+    return localStart.year == now.year &&
+        localStart.month == now.month &&
+        localStart.day == now.day;
+  }
 
   /// Whether the store is currently accepting pickups.
   bool get isOpenNow {

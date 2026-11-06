@@ -32,4 +32,36 @@ void main() {
     expect(deal.isFlashSale, isFalse);
     expect(deal.pickupWindow.start.isUtc, isTrue);
   });
+
+  test('PickupWindowModel converts UTC to local for label and isToday', () {
+    final now = DateTime.now();
+    final todayLocalStart = DateTime(now.year, now.month, now.day, 10, 0);
+    final todayLocalEnd = DateTime(now.year, now.month, now.day, 12, 0);
+
+    final deal = DealModel.fromJson({
+      'id': 1,
+      'name': 'Test',
+      'description': '',
+      'imageUrl': '',
+      'originalPrice': 100,
+      'price': 50,
+      'currencyCode': 'THB',
+      'quantityLeft': 1,
+      'storeId': 1,
+      'storeName': '',
+      'storeAddress': '',
+      'lat': 0.0,
+      'lng': 0.0,
+      'rating': null,
+      'tags': [],
+      'pickupWindow': {
+        'start': todayLocalStart.toUtc().toIso8601String(),
+        'end': todayLocalEnd.toUtc().toIso8601String(),
+      },
+      'flashSaleEndsAt': null,
+    });
+
+    expect(deal.pickupWindow.label, '10:00 – 12:00');
+    expect(deal.pickupWindow.isToday, isTrue);
+  });
 }
