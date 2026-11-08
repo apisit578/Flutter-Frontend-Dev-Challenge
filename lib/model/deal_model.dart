@@ -66,6 +66,12 @@ class DealModel {
 
   bool get isFlashSale => flashSaleEndsAt != null;
 
+  bool get isFlashExpired {
+    if (flashSaleEndsAt == null) return false;
+    final remaining = flashSaleEndsAt!.difference(DateTime.now());
+    return remaining.isNegative || remaining == Duration.zero;
+  }
+
   int get discountPercent =>
       originalPrice <= 0 ? 0 : (100 - (price / originalPrice * 100)).round();
 }

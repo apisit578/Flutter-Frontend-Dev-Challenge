@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../../app_config.dart';
 import '../../model/deal_model.dart';
 import '../../routes/routes.dart';
+import '../../service/cart_service.dart';
+import 'flash_sale_countdown.dart';
 import 'the_network_image.dart';
 
 /// Deal card used in the home feed and search results.
@@ -15,52 +17,51 @@ class DealCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isExpired = deal.isFlashExpired;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       clipBehavior: Clip.antiAlias,
       color: Colors.white,
       elevation: 0.5,
       child: InkWell(
-        onTap: () => Get.toNamed(
-          Routes.dealRoute(deal.id, source: source),
-          arguments: deal,
-        ),
+        onTap: isExpired
+            ? null
+            : () => Get.toNamed(
+                  Routes.dealRoute(deal.id, source: source),
+                  arguments: deal,
+                ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
               children: [
-                TheNetworkImage(url: deal.imageUrl, height: 160, width: double.infinity),
-                if (deal.isFlashSale)
+                TheNetworkImage(
+                    url: deal.imageUrl, height: 160, width: double.infinity),
+                if (deal.isFlashSale && deal.flashSaleEndsAt != null)
                   Positioned(
                     top: 8,
                     left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade600,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'FLASH SALE',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold),
-                      ),
+                    child: FlashSaleCountdown(
+                      flashSaleEndsAt: deal.flashSaleEndsAt!,
+                      onExpired: () {
+                        if (Get.isRegistered<CartService>()) {
+                          Get.find<CartService>().removeExpiredFlashItems();
+                        }
+                      },
                     ),
                   ),
                 Positioned(
                   top: 8,
                   right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.65),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '${deal.quantityLeft} left',
+                      isExpired ? '0 left' : '${deal.quantityLeft} left',
                       style: const TextStyle(color: Colors.white, fontSize: 11),
                     ),
                   ),

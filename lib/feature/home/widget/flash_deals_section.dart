@@ -4,12 +4,11 @@ import 'package:get/get.dart';
 import '../../../app_config.dart';
 import '../../../model/deal_model.dart';
 import '../../../routes/routes.dart';
+import '../../../service/cart_service.dart';
+import '../../shared_widget/flash_sale_countdown.dart';
 import '../../shared_widget/the_network_image.dart';
 
 /// Horizontal flash-sale rail.
-///
-/// NOTE: the countdown is currently a static "Ends soon" label — turning it
-/// into a live per-deal countdown is one of the feature tasks in PROBLEM.md.
 class FlashDealsSection extends StatelessWidget {
   final List<DealModel> deals;
 
@@ -47,10 +46,12 @@ class FlashDealsSection extends StatelessWidget {
                   clipBehavior: Clip.antiAlias,
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   child: InkWell(
-                    onTap: () => Get.toNamed(
-                      Routes.dealRoute(deal.id, source: 'flash_rail'),
-                      arguments: deal,
-                    ),
+                    onTap: deal.isFlashExpired
+                        ? null
+                        : () => Get.toNamed(
+                              Routes.dealRoute(deal.id, source: 'flash_rail'),
+                              arguments: deal,
+                            ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -66,9 +67,12 @@ class FlashDealsSection extends StatelessWidget {
                               Text(deal.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w600)),
+                                      fontWeight: FontWeight.w600,
+                                      color: deal.isFlashExpired
+                                          ? Colors.grey
+                                          : Colors.black)),
                               Text(deal.storeName,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -79,23 +83,36 @@ class FlashDealsSection extends StatelessWidget {
                               Row(
                                 children: [
                                   Text('฿${deal.price.toStringAsFixed(0)}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: AppConfig.primaryGreen)),
+                                          color: deal.isFlashExpired
+                                              ? Colors.grey
+                                              : AppConfig.primaryGreen)),
                                   const Spacer(),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.shade50,
-                                      borderRadius: BorderRadius.circular(4),
+                                  if (deal.flashSaleEndsAt != null)
+                                    FlashSaleCountdown(
+                                      flashSaleEndsAt: deal.flashSaleEndsAt!,
+                                      onExpired: () {
+                                        if (Get.isRegistered<CartService>()) {
+                                          Get.find<CartService>()
+                                              .removeExpiredFlashItems();
+                                        }
+                                      },
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: deal.isFlashExpired
+                                            ? Colors.grey.shade300
+                                            : Colors.red.shade50,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      textStyle: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: deal.isFlashExpired
+                                              ? Colors.grey.shade700
+                                              : Colors.red.shade700),
                                     ),
-                                    child: Text('Ends soon',
-                                        style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.red.shade700)),
-                                  ),
                                 ],
                               ),
                             ],
