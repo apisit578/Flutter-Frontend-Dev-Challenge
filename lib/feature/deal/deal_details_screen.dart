@@ -22,7 +22,7 @@ class DealDetailsScreen extends GetView<DealDetailsController> {
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
-                fit: StackTraceFit.expand,
+                fit: StackFit.expand,
                 children: [
                   TheNetworkImage(url: deal.imageUrl, fit: BoxFit.cover),
                   if (deal.isFlashSale && deal.flashSaleEndsAt != null)
